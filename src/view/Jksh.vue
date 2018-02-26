@@ -4,7 +4,7 @@
             <tabs :tab-items="tabs" :tab-index="tabIndex" :on-tab-click="onTabClick"></tabs>
             <div class="mt50">
                 <div class="score-mission item-icon-left" v-for="(list,index) in scoreApplyList" :key="list.applyid">
-                    <i class="icon" :class="list.active ? 'ion-ios-checkmark positive' : 'ion-ios-circle-outline grey'" @click="toggle(list, index)"></i>
+                    <i class="icon" v-bind:class="{'ion-ios-checkmark positive': list.checked, 'ion-ios-circle-outline grey': !list.checked}" @click="selectedProduct(list)"></i> 
                     <ul class="list" @click="intoDetail(list, index)">
                         <li>
                             <label>申请人：</label>
@@ -42,7 +42,7 @@
                 </div>
             </div>
             <div class="item item-icon-left jksh-all">
-                <i class="icon" :class="active ? 'ion-ios-checkmark positive' : 'ion-ios-circle-outline grey'"></i>
+                <i class="icon" :class="checkAllFlag ? 'ion-ios-checkmark positive' : 'ion-ios-circle-outline grey'" @click="checkAll"></i>
                 全部
                 <span class="item-note">
                 <md-button class="button button-assertive" data-checkedresult="0" @click.native="submit">
@@ -70,7 +70,8 @@
         return {
           tabs: ["待审核", "已通过", "已驳回"],
           tabIndex: 0,
-          scoreApplyList: []
+          scoreApplyList: [],
+          checkAllFlag: false
         };
       },
       methods: {
@@ -83,11 +84,28 @@
           this.tabIndex = index;
           this.getApplyList();
         },
-        // 勾选item
-        toggle(list, index) {
-          list.active = !list.active;
-          console.log(list);
-          console.log(this.lists);
+        // 点击勾选/清除item
+        selectedProduct(item) {
+          if (typeof item.checked == "undefined") {
+            // 怎样判断一个对象的变量存不存在 看他的typeof == undedined
+            /**
+             * this.$set(item,"checked",true)  局部注册
+             */
+            Vue.set(item, "checked", true);
+          } else {
+            item.checked = !item.checked;
+          }
+        },
+        // 全选
+        checkAll () {
+            this.checkAllFlag = !this.checkAllFlag;
+            this.scoreApplyList.forEach(item => {
+                if (typeof item.checked == "undefined") {
+                    this.$set(item,"checked",this.checkAllFlag)
+                } else {
+                    item.checked = this.checkAllFlag;
+                }
+            })
         },
         // 点击item进入审核详情
         intoDetail(list, index) {
@@ -112,11 +130,7 @@
               checktime: -2209017600000
             }
           ];
-          // 自定义添加未选中的属性 方便勾选使用
-          scoreApplyList.forEach(list => {
-            list.active = false;
-            return scoreApplyList;
-          });
+
           this.scoreApplyList = scoreApplyList;
         },
         // 获取我的待审核、审核通过、已驳回积分申请列表-接口请求
